@@ -13,7 +13,7 @@
     </thead>
 
     <tbody>
-    <% @tweets_hash.each do |id, tweet| %>
+    <% @tweets.each do |tweet| %>
         <tr id=tr_<%=tweet.id%> "result_tr" <%if tweet.attrs["read"] then%>style="display: none;"<%else%> style="table-row"<%end%>">
         <td colspan="17" align="center"><input type="checkbox" value=<%=tweet.id%> onclick="update_read_state(this.value);" <%if tweet.attrs["read"] then %> checked="true" <%end%> /></td>
         <td colspan="5"><%= auto_link(tweet.full_text) %></td>
@@ -22,5 +22,6 @@
     <% end %>
     </tbody>
   </table>
+    <%= will_paginate @page_results , :class => "my_pagination"%>
 <% end %>
 <br>

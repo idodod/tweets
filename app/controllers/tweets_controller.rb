@@ -4,7 +4,7 @@ class TweetsController < ApplicationController
   # GET /tweets
   # GET /tweets.json
   def index
-    flash[:notice] = ''
+    #flash[:notice] = ''
     if (@search_text)# check user is logged in before trying to perform search
       if (current_user)
         @twitter_user_name = @search_text
@@ -13,13 +13,15 @@ class TweetsController < ApplicationController
           flash[:notice] = 'You must login before performing search'
           redirect_to root_path
         end
-        @twitter_user_id = get_twitter_user_id(@twitter_user_name)
+        twitter_user_obj = get_twitter_user_obj(@twitter_user_name)
 
+        @twitter_user_id = twitter_user_obj.id if twitter_user_obj
+        tweets_total = [twitter_api_result_limitation, twitter_user_obj.statuses_count].min if twitter_user_obj
         if @twitter_user_id
           session[:current_searched_twitter_user_id] = @twitter_user_id
-          @tweets = get_all_tweets(@twitter_user_name)
 
-          if not @tweets or not @tweets.count
+          @tweets = get_tweets(@twitter_user_name, @page, tweets_per_call_count)
+          if not @tweets or @tweets.count == 0
             flash[:notice] = "The user #{@twitter_user_name} has no tweets"
           end
 
@@ -29,6 +31,11 @@ class TweetsController < ApplicationController
           @tweets_hash = @tweets.map { |tweet| tweet.attrs["read"] = false; [tweet.id.to_s, tweet] }.to_h
 
           mark_read_tweets(@tweets_hash, read_tweets)
+
+          @tweets = @tweets_hash.values
+          @page_results = WillPaginate::Collection.create(@page, tweets_per_call_count, tweets_total) do |pager|
+            pager.replace(@tweets)
+          end
 
           if not @tweets_hash.any? { |id, tweet| not tweet.attrs["read"]}
             flash[:notice] = "The user #{@twitter_user_name} has no unread tweets"
@@ -94,21 +101,27 @@ class TweetsController < ApplicationController
     end
   end
 
-  # return the first 20 tweets by the given user
-  def get_tweets(twitter_user_name)
-    tweets_arr = twitter_client.user_timeline(twitter_user_name, exclude_replies: true, count: 20)
+  # return the count amount of tweets in the given page
+  def get_tweets(twitter_user_name, page, count)
+    begin
+      tweets_arr = twitter_client.user_timeline(twitter_user_name, exclude_replies: true, count: count, page: page)
+    rescue => e
+      tweets_arr = []
+    end
+
     #tweets_hash = tweets_arr.map { |tweet| [tweet.id, tweet] }.to_h
   end
 
-  # gets the twitter user id according to given user name
-  def get_twitter_user_id(user_name)
+  # gets the twitter user obj according to given user name
+  def get_twitter_user_obj(user_name)
     begin
       user_result = twitter_client.user(user_name)
-      user_id = user_result.id
     rescue Twitter::Error::NotFound => e
-      user_id = nil
+      user_result = nil
+    rescue Twitter::Error::Forbidden => e
+      user_result = nil
     end
-    user_id
+    user_result
   end
 
   # gets a hash of tweets and array of read tweets from DB and marks the tweets in the hash as read for relevant tweets
@@ -121,14 +134,28 @@ class TweetsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_search_text
       @search_text = params[:term]
+      if params.key?(:page)
+        @page = params[:page]
+      else
+        @page = 1
+      end
     end
 
     def set_tweet_id
       @tweet_id = params[:tweet_id]
     end
 
+
     # Never trust parameters from the scary internet, only allow the white list through.
     def tweet_params
-      params.require(:tweet).permit(:term, :tweet_id)
+      params.require(:tweet).permit(:term, :tweet_id, :page)
     end
+
+  def tweets_per_call_count
+    20
+  end
+
+  def twitter_api_result_limitation
+    3200
+  end
 end
