@@ -1,12 +1,24 @@
 <nav class="navbar navbar-inverse">
   <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
-      <%= link_to 'Tweets', tweets_path, class: 'navbar-brand' %>
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <!--<a class="navbar-brand nav navbar-nav navbar-left" href="#">Tweets</a>-->
     </div>
-    <div id="navbar">
-
-      <ul class="nav navbar-nav pull-right">
-        <li><%= link_to 'Home', tweets_path %></li>
+    <div class="collapse navbar-collapse" id="navbar-collapse">
+      <ul class="navbar-brand nav navbar-nav navbar-left">
+        <li><%= link_to 'Home', root_path %></li>
+        <% if current_user %>
+            <li><a>Signed in as <%= current_user.name %></a></li>
+            <li><%= link_to 'Log Out', logout_path, method: :delete %></li>
+        <% else %>
+            <li><%= link_to "Sign in with Twitter", "/auth/twitter" %></li>
+        <% end %>
       </ul>
     </div>
   </div>
