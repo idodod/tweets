@@ -1,9 +1,10 @@
 class TweetsController < ApplicationController
-  before_action :set_tweet, only: [:index, :update]
+  before_action :set_search_text, only: [:index]
 
   # GET /tweets
   # GET /tweets.json
   def index
+    flash[:notice] = ''
     if (@search_text)# check user is logged in before trying to perform search
       if (current_user)
         @twitter_user_name = @search_text
@@ -23,6 +24,7 @@ class TweetsController < ApplicationController
           end
 
           read_tweets = Tweet.get_read_tweets(current_user.id, @twitter_user_id,@tweets.map(&:id)).to_a
+          puts "read_Tweets count is " + read_tweets.count.to_s
 
           @tweets_hash = @tweets.map { |tweet| tweet.attrs["read"] = false; [tweet.id.to_s, tweet] }.to_h
 
@@ -50,14 +52,12 @@ class TweetsController < ApplicationController
   # PATCH/PUT /tweets/1
   # PATCH/PUT /tweets/1.json
   def update
+    tweet_id = tweet_params[:tweet_id].to_s
+
+    Tweet.find_or_create_by(current_user.id, tweet_id, session[:current_searched_twitter_user_id].to_s)
     respond_to do |format|
-      if @tweet.update(tweet_params)
-        format.html { redirect_to @tweet, notice: 'Tweet was successfully updated.' }
-        format.json { render :show, status: :ok, location: @tweet }
-      else
-        format.html { render :edit }
-        format.json { render json: @tweet.errors, status: :unprocessable_entity }
-      end
+      format.html
+      format.json { head :no_content }
     end
   end
 
@@ -119,12 +119,16 @@ class TweetsController < ApplicationController
   end
 
     # Use callbacks to share common setup or constraints between actions.
-    def set_tweet
+    def set_search_text
       @search_text = params[:term]
+    end
+
+    def set_tweet_id
+      @tweet_id = params[:tweet_id]
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def tweet_params
-      params.require(:tweet).permit(:term)
+      params.require(:tweet).permit(:term, :tweet_id)
     end
 end
