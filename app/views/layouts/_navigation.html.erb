@@ -11,6 +11,7 @@
       <!--<a class="navbar-brand nav navbar-nav navbar-left" href="#">Tweets</a>-->
     </div>
     <div class="collapse navbar-collapse" id="navbar-collapse">
+      <%= form_tag(tweets_path, method: :get) do %>
       <ul class="navbar-brand nav navbar-nav navbar-left">
         <li><%= link_to 'Home', root_path %></li>
         <% if current_user %>
@@ -20,6 +21,13 @@
             <li><%= link_to "Sign in with Twitter", "/auth/twitter" %></li>
         <% end %>
       </ul>
+      <ul class="navbar-brand nav navbar-nav navbar-right">
+        <% if current_user %>
+        <li><%= text_field_tag :term, params[:term], :class => "search_box", placeholder: "Search Tweets By User" %></li>
+        <li><%= submit_tag 'Search', name: nil, :class => "button"  %></li>
+            <%end%>
+      </ul>
+      <% end %>
     </div>
   </div>
 </nav>
