@@ -18,7 +18,7 @@
             <li><a>Signed in as <%= current_user.name %></a></li>
             <li><%= link_to 'Log Out', logout_path, method: :delete %></li>
         <% else %>
-            <li><%= link_to "Sign in with Twitter", "/auth/twitter" %></li>
+            <li><%= link_to "Sign in with Twitter to search for tweets", "/auth/twitter" %></li>
         <% end %>
       </ul>
       <ul class="navbar-brand nav navbar-nav navbar-right">

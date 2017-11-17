@@ -1,24 +1,26 @@
-<p id="notice"><%= notice %></p>
+<h1 id="notice"><%= notice %></h1>
 
-<h1>Tweets</h1>
 
-<table>
-  <thead>
+<% if @search_text and current_user and @twitter_user_id %>
+  <table>
+    <thead>
     <tr>
-      <th>Tweet</th>
-      <th>Read</th>
+      <th colspan="17">Mark As Read</th>
+      <th colspan="5">Tweet</th>
+      <th>Time</th>
       <th colspan="3"></th>
     </tr>
-  </thead>
+    </thead>
 
-  <tbody>
-    <% @tweets.each do |tweet| %>
-      <tr>
-        <td><%= tweet.tweet_id %></td>
-        <td><%= tweet.read %></td>
-      </tr>
+    <tbody>
+    <% @tweets_hash.each do |id, tweet| %>
+        <tr id=tr_<%=tweet.id%> "result_tr" <%if tweet.attrs["read"] then%>style="display: none;"<%else%> style="table-row"<%end%>">
+        <td colspan="17" align="center"><input type="checkbox" value=<%=tweet.id%> onclick="update_read_state(this.value);" <%if tweet.attrs["read"] then %> checked="true" <%end%> /></td>
+        <td colspan="5"><%= auto_link(tweet.full_text) %></td>
+        <td><%= tweet.created_at.strftime("%a, %d %b %Y %H:%M:%S") %></td>
+        </tr>
     <% end %>
-  </tbody>
-</table>
-
+    </tbody>
+  </table>
+<% end %>
 <br>
